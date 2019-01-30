@@ -26,6 +26,33 @@ function addEvent(eventName, ageRestriction) {
     currentEventId++;
 }
 
+function editEvent(id, newValues) {
+    if (('name' in newValues) && newValues['name'].match(/^\\s*$/)) {
+        console.log("Невалидно име");
+        return;
+    }
+
+    let accessFlag = events[id]['accessFlag'];
+    if ('ageRestriction' in newValues) {
+        if (newValues['ageRestriction'].match(/^18\+$/)) {
+            accessFlag = true;
+        } else if (newValues['ageRestriction'].match(/^18-$/) || newValues['ageRestriction'].match(/^$/)) {
+            accessFlag = false;
+        } else {
+            console.log("Грешно възрастово ограничение!");
+            return;
+        }
+    }
+
+    if ('name' in newValues)
+        events[id]['name'] = newValues['name'];
+    if ('ageRestriction' in newValues)
+        events[id]['accessFlag'] = newValues['ageRestriction'];
+
+    ageRestriction = events[id]['accessFlag'] ? "18+" : "18-";
+    console.log(`${id}. Име на събитие: ${events[id]['name']}, Възрастово ограничение: ${ageRestriction}`);
+}
+
 function removeEvent(id) {
     if (isNaN(id)) {
         console.log("Невалидно id");
@@ -61,6 +88,19 @@ switch(process.argv[2]) {
             addEvent(process.argv[3], process.argv[4]);
         break;
     case 'edit-event':
+        //node app.js edit-event <id> [<what_to_edit> <new_value>...]
+        if (process.argv.length < 6)
+            break;
+        let validKeys = ["name", "ageRestriction"];
+        let newValues = {};
+        for (let i = 4; i < process.argv.length; i += 2) {
+            if (!validKeys.includes(process.argv[i])) {
+                console.log(`Невалиден атрибут: {process.argv[i]}`);
+                break;
+            }
+            newValues[process.argv[i]] = process.argv[i + 1];
+        }
+        editEvent(process.argv[3], newValues);
         break;
     case 'remove-event':
     case 'delete-event':
