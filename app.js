@@ -76,6 +76,27 @@ function printEvents() {
     }
 }
 
+function printClients() {
+    for (let key in clients) {
+        console.log(`Име: ${key}, Пол: ${clients[key]['sex']}, Възраст: ${clients[key]['age']}`)
+    }
+}
+
+function addClient(name, sex, age) {
+    if ((sex != 'м') && (sex != 'ж')){
+        console.log("Невалиден пол!");
+        return;
+    }
+    if (isNaN(age)) {
+        console.log("Невалидна възраст");
+        return;
+    }
+
+    clients[name] = {'sex': sex,
+                        'age': age};
+    writeDataToJSON();
+}
+
 function writeDataToJSON() {
     let writer = fs.createWriteStream('./data.json', {flags: 'w'});
     writer.write(JSON.stringify(events));
@@ -129,6 +150,15 @@ switch(process.argv[2]) {
     case 'remove-event':
     case 'delete-event':
         removeEvent(process.argv[3]);
+        break;
+    case 'list-clients':
+        printClients();
+        break;
+    case 'add-client':
+        if (process.argv.length < 5)
+            break;
+        //argv[3] - Name, argv[4] - Sex, argv[5] - Age
+        addClient(process.argv[3], process.argv[4], process.argv[5]);
         break;
 }
 
