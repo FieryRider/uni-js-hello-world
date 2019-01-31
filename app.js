@@ -76,6 +76,25 @@ function printEvents() {
     }
 }
 
+function printEventClients(eventId, sex) {
+    let filter = false;
+    if (arguments.length == 2) {
+        if ((sex != 'м') && (sex != 'ж')){
+            console.log("Невалиден пол!");
+            return;
+        }
+        filter = true;
+    }
+    events[eventId]['participants'].forEach((clientName) => {
+        if (filter == true) {
+            if (client[clientName]['sex'] == sex)
+                console.log(`Име: ${clientName}, Пол: ${clients[clientName]['sex']}, Възраст: ${clients[clientName]['age']}`)
+        } else {
+            console.log(`Име: ${clientName}, Пол: ${clients[clientName]['sex']}, Възраст: ${clients[clientName]['age']}`)
+        }
+    });
+}
+
 function printClients() {
     for (let key in clients) {
         console.log(`Име: ${key}, Пол: ${clients[key]['sex']}, Възраст: ${clients[key]['age']}`)
@@ -95,6 +114,24 @@ function addClient(name, sex, age) {
     clients[name] = {'sex': sex,
                         'age': age};
     writeDataToJSON();
+}
+
+function addClientToEvent(eventId, clientName) {
+    if ((clients[clientName]['age'] < 18) && events[eventId]['accessFlag']) {
+        console.log("Потребителя няма нужната възраст за това събитие!");
+        return;
+    }
+    events[eventId]['participants'].push(clientName);
+    writeDataToJSON();
+}
+
+function removeClientFromEvent(eventId, clientName) {
+    events['participants'].forEach((client, idx) => {
+        if (client == clientName) {
+            events['participants'].splice(idx, 1);
+            console.log(`Потребител: {client} е успешно премахнат от "{events[eventId]}"`);
+        }
+    });
 }
 
 function writeDataToJSON() {
@@ -159,6 +196,26 @@ switch(process.argv[2]) {
             break;
         //argv[3] - Name, argv[4] - Sex, argv[5] - Age
         addClient(process.argv[3], process.argv[4], process.argv[5]);
+        break;
+    case 'add-client-event':
+        //argv[3] - Client Name, argv[4] - EventId
+        addClientToEvent(process.argv[3], process.argv[4]);
+        break;
+    case 'list-event-clients':
+        //argv[3] - Event ID, argv[4] - sexFilter ('м'/'ф')
+        if (process.argv.length < 5) {
+            printEventClients(process.argv[3]);
+        } else {
+            printEventClients(process.argv[3], process.argv[4]);
+        }
+        break;
+    case 'remove-event-client':
+        //argv[3] - Event Id, argv[4] - Client's name
+        if (process.argv.length < 5) {
+            console.log("Недостатъчно аргументи");
+            break;
+        }
+        removeClientFromEvent(process.argv[3], process.argv[4]);
         break;
 }
 
