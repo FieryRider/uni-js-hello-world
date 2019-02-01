@@ -134,16 +134,7 @@ function removeClientFromEvent(eventId, clientName) {
     writeDataToJSON();
 }
 
-function writeDataToJSON() {
-    let writer = fs.createWriteStream('./data.json', {flags: 'w'});
-    writer.write(JSON.stringify(events));
-    writer.write('\n');
-    writer.write(JSON.stringify(clients));
-    writer.end();
-    writer.close();
-}
-
-if (fs.existsSync('./data.json')) {
+function readDataFromJSON() {
     let reader = require('readline').createInterface({
         input: fs.createReadStream('./data.json'),
     });
@@ -155,10 +146,22 @@ if (fs.existsSync('./data.json')) {
     currentEventId = parseInt(Object.keys(events)[Object.keys(events).length -1]) + 1;
 }
 
+function writeDataToJSON() {
+    let writer = fs.createWriteStream('./data.json', {flags: 'w'});
+    writer.write(JSON.stringify(events));
+    writer.write('\n');
+    writer.write(JSON.stringify(clients));
+    writer.end();
+    writer.close();
+}
 
 //arg0: node, arg1: app.js, arg2: commmand, arg3+: command argument
 if (process.argv.length < 3)
     process.exit();
+
+if (fs.existsSync('./data.json')) {
+    readDataFromJSON();
+}
 
 switch(process.argv[2]) {
     case 'list-events':
