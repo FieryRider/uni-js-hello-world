@@ -4,6 +4,15 @@ var clients = {};
 
 var currentEventId=0;
 
+/*
+ *Event Management functions
+ */
+
+/*
+ * @param {string} eventName
+ * @param {string} ageRestriction
+ *   '18-' or '18+'
+ */
 function addEvent(eventName, ageRestriction) {
     if (eventName.match(/^\\s*$/)) {
         console.log("Невалидно име");
@@ -27,6 +36,12 @@ function addEvent(eventName, ageRestriction) {
     writeDataToJSON();
 }
 
+/*
+ * @param {int} id
+ *   Event ID
+ * @param {object} newValues
+ *   The new event properties
+ */
 function editEvent(id, newValues) {
     if (('name' in newValues) && newValues['name'].match(/^\\s*$/)) {
         console.log("Невалидно име");
@@ -75,6 +90,13 @@ function printEvents() {
     }
 }
 
+/*
+ * Prints the clients that participate in an event (All info about them)
+ * @param {int} eventId
+ *   ID of the event
+ * @param {char} sex (optional)
+ *   Filter client by sex ('м' or 'ж')
+ */
 function printEventClients(eventId, sex) {
     let filter = false;
     if (arguments.length == 2) {
@@ -100,6 +122,13 @@ function printClients() {
     }
 }
 
+/*
+ * Adds a client to the list of clients
+ * @param {string} name
+ * @param {char} sex
+ *   'м' or 'ж'
+ * @param {int} age
+ */
 function addClient(name, sex, age) {
     if ((sex != 'м') && (sex != 'ж')){
         console.log("Невалиден пол!");
