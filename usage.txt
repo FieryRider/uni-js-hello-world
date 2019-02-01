@@ -1,0 +1,35 @@
+List events:
+node app.js list-events
+
+List clients:
+node app.js list-clients
+
+Add event:
+node app.js add-event <event_name> [<age_restriction (18+)>]
+node app.js add-event SomeEvent 
+node app.js add-event SomeEvent 18+
+
+Remove event:
+node app.js [remove-event, delete-event] <id>
+
+Edit event:
+node app.js edit-event <event_id> <property_to_edit> <value> ...
+node app.js edit-event 1 name FirstEvent
+node app.js edit-event 1 ageRestriction 18+
+node app.js edit event 1 name Kupon ageRestriction 18+
+
+Add client:
+node app.js add-client <client_name> <sex м/ж> <age>
+node app.js add-client Пешо м 24
+
+Add client to event:
+node app.js add-client-event <client_name> <event_id>
+node app.js add-client-event Пешо 1
+
+List clients in event:
+node app.js list-event-clients <event_id>
+node app.js list-event-clients 1
+
+Remove client from event:
+node app.js remove-event-client <event_id> <client_name>
+node app.js remove-event-client 1 Пешо

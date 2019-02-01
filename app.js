@@ -2,7 +2,7 @@ const fs = require('fs');
 var events = {};
 var clients = {};
 
-var currentEventId=0
+var currentEventId=0;
 
 function addEvent(eventName, ageRestriction) {
     if (eventName.match(/^\\s*$/)) {
@@ -12,7 +12,6 @@ function addEvent(eventName, ageRestriction) {
 
     let accessFlag = false;
     if (arguments.length == 2) {
-        console.log(ageRestriction);
         if (ageRestriction.match(/^18\+$/)) {
             accessFlag = true;
         } else if (ageRestriction.match(/^18-$/)) {
@@ -49,7 +48,7 @@ function editEvent(id, newValues) {
     if ('name' in newValues)
         events[id]['name'] = newValues['name'];
     if ('ageRestriction' in newValues)
-        events[id]['accessFlag'] = newValues['ageRestriction'];
+        events[id]['accessFlag'] = accessFlag;
 
     ageRestriction = events[id]['accessFlag'] ? "18+" : "18-";
     console.log(`${id}. Име на събитие: ${events[id]['name']}, Възрастово ограничение: ${ageRestriction}`);
@@ -126,12 +125,13 @@ function addClientToEvent(eventId, clientName) {
 }
 
 function removeClientFromEvent(eventId, clientName) {
-    events['participants'].forEach((client, idx) => {
+    events[eventId]['participants'].forEach((client, idx) => {
         if (client == clientName) {
-            events['participants'].splice(idx, 1);
-            console.log(`Потребител: {client} е успешно премахнат от "{events[eventId]}"`);
+            events[eventId]['participants'].splice(idx, 1);
+            console.log(`Потребител: ${client} е успешно премахнат от "${events[eventId]['name']}"`);
         }
     });
+    writeDataToJSON();
 }
 
 function writeDataToJSON() {
@@ -143,16 +143,18 @@ function writeDataToJSON() {
     writer.close();
 }
 
-let reader = require('readline').createInterface({
-    input: fs.createReadStream('./data.json'),
-});
+if (fs.existsSync('./data.json')) {
+    let reader = require('readline').createInterface({
+        input: fs.createReadStream('./data.json'),
+    });
 
-let data = fs.readFileSync('./data.json', 'utf-8').split('\n');
+    let data = fs.readFileSync('./data.json', 'utf-8').split('\n');
 
-events = JSON.parse(data[0]);
-clients = JSON.parse(data[1]);
+    events = JSON.parse(data[0]);
+    clients = JSON.parse(data[1]);
+    currentEventId = parseInt(Object.keys(events)[Object.keys(events).length -1]) + 1;
+}
 
-currentEventId = parseInt(Object.keys(events)[Object.keys(events).length -1]) + 1;
 
 //arg0: node, arg1: app.js, arg2: commmand, arg3+: command argument
 if (process.argv.length < 3)
@@ -198,7 +200,7 @@ switch(process.argv[2]) {
         addClient(process.argv[3], process.argv[4], process.argv[5]);
         break;
     case 'add-client-event':
-        //argv[3] - Client Name, argv[4] - EventId
+        //argv[3] - Event ID, argv[4] - Client's Name
         addClientToEvent(process.argv[3], process.argv[4]);
         break;
     case 'list-event-clients':
@@ -218,4 +220,3 @@ switch(process.argv[2]) {
         removeClientFromEvent(process.argv[3], process.argv[4]);
         break;
 }
-
