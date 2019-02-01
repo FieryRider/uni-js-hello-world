@@ -164,24 +164,18 @@ function removeClientFromEvent(eventId, clientName) {
 }
 
 function readDataFromJSON() {
-    let reader = require('readline').createInterface({
-        input: fs.createReadStream('./data.json'),
-    });
+    let data = fs.readFileSync('./data.json', {'encoding': "utf-8"});
 
-    let data = fs.readFileSync('./data.json', 'utf-8').split('\n');
-
-    events = JSON.parse(data[0]);
-    clients = JSON.parse(data[1]);
+    events = JSON.parse(data)['events'];
+    clients = JSON.parse(data)['clients'];
     currentEventId = parseInt(Object.keys(events)[Object.keys(events).length -1]) + 1;
 }
 
 function writeDataToJSON() {
-    let writer = fs.createWriteStream('./data.json', {flags: 'w'});
-    writer.write(JSON.stringify(events));
-    writer.write('\n');
-    writer.write(JSON.stringify(clients));
-    writer.end();
-    writer.close();
+    let eventsJSON = JSON.stringify(events);
+    let clientsJSON = JSON.stringify(clients);
+    let JSONString = `{"events": ${eventsJSON}, "clients": ${clientsJSON}}`;
+    fs.writeFileSync('./data.json', JSONString);
 }
 
 //arg0: node, arg1: app.js, arg2: commmand, arg3+: command argument
