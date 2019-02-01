@@ -2,6 +2,9 @@ const fs = require('fs');
 var events = {};
 var clients = {};
 
+// Blocks adding of events or clients
+var blockAdding = false;
+
 var currentEventId=0;
 
 /*
@@ -14,6 +17,11 @@ var currentEventId=0;
  *   '18-' or '18+'
  */
 function addEvent(eventName, ageRestriction) {
+    if (blockAdding) {
+        console.log("Добавянето на събития и клиенти е блокирано");
+        return;
+    }
+
     if (eventName.match(/^\\s*$/)) {
         console.log("Невалидно име");
         return;
@@ -130,6 +138,10 @@ function printClients() {
  * @param {int} age
  */
 function addClient(name, sex, age) {
+    if (blockAdding) {
+        console.log("Добавянето на събития и клиенти е блокирано");
+        return;
+    }
     if ((sex != 'м') && (sex != 'ж')){
         console.log("Невалиден пол!");
         return;
@@ -168,13 +180,14 @@ function readDataFromJSON() {
 
     events = JSON.parse(data)['events'];
     clients = JSON.parse(data)['clients'];
+    blockAdding = JSON.parse(data)['blockAdding'];
     currentEventId = parseInt(Object.keys(events)[Object.keys(events).length -1]) + 1;
 }
 
 function writeDataToJSON() {
     let eventsJSON = JSON.stringify(events);
     let clientsJSON = JSON.stringify(clients);
-    let JSONString = `{"events": ${eventsJSON}, "clients": ${clientsJSON}}`;
+    let JSONString = `{"blockAdding": ${blockAdding}, "events": ${eventsJSON}, "clients": ${clientsJSON}}`;
     fs.writeFileSync('./data.json', JSONString);
 }
 
@@ -244,5 +257,13 @@ switch(process.argv[2]) {
             break;
         }
         removeClientFromEvent(process.argv[3], process.argv[4]);
+        break;
+    case 'lock-system':
+        blockAdding = true;
+        writeDataToJSON();
+        break;
+    case 'unlock-system':
+        blockAdding = false;
+        writeDataToJSON();
         break;
 }
