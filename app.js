@@ -12,26 +12,33 @@ var currentEventId=0;
  */
 
 /*
- * @param {string} eventName
- * @param {string} ageRestriction
- *   '18-' or '18+'
+ * @param {object} values
+ *   Event parameters
+ *   @prop {string} name
+ *   @prop {string} ageRestriction (optional)
+ *     'няма' or '18+'
+ *   @prop {string} date (optional)
+ *     'dd.mm.yyyy'
  */
-function addEvent(eventName, ageRestriction) {
+function addEvent(values) {
     if (blockAdding) {
         console.log("Добавянето на събития и клиенти е блокирано");
         return;
     }
 
-    if (eventName.match(/^\\s*$/)) {
+    if (! ('name' in values)) {
+        console.log("Въведете име на събитие!");
+    }
+    if (values['name'].match(/^\\s*$/)) {
         console.log("Невалидно име");
         return;
     }
 
     let accessFlag = false;
-    if (arguments.length == 2) {
-        if (ageRestriction.match(/^18\+$/)) {
+    if ('ageRestriction' in values) {
+        if (values['ageRestriction'].match(/^18\+$/)) {
             accessFlag = true;
-        } else if (ageRestriction.match(/^18-$/)) {
+        } else if (values['ageRestriction'].match(/^няма$/)) {
             accessFlag = false;
         } else {
             console.log("Грешно възрастово ограничение!");
@@ -39,7 +46,21 @@ function addEvent(eventName, ageRestriction) {
         }
     }
 
-    events[currentEventId] = {'name': eventName, 'accessFlag': accessFlag, 'participants': []};
+    let date = null
+    if ('date' in values) {
+        if (values['date'].match(/\d{2}\.\d{2}\.\d{4}/)) {
+            // Manually parsing date string (as mozilla docs recommend)
+            let day = values['date'].split('.')[0];
+            let month = values['date'].split('.')[1];
+            let year = values['date'].split('.')[2];
+            date = (new Date(parseInt(year), parseInt(month), parseInt(day))).toString();
+        } else {
+            console.log("Грешен формат за дата!");
+            return;
+        }
+    }
+
+    events[currentEventId] = {'name': values['name'], 'accessFlag': accessFlag, 'date': date, 'participants': []};
     currentEventId++;
     writeDataToJSON();
 }
@@ -48,13 +69,14 @@ function addEvent(eventName, ageRestriction) {
  * @param {int} id
  *   Event ID
  * @param {object} newValues
- *   The new event properties
+ *   Event parameters
+ *   @prop {string} name
+ *   @prop {string} ageRestriction (optional)
+ *     'няма' or '18+'
+ *   @prop {string} date (optional)
+ *     'dd.mm.yyyy'
  */
 function editEvent(id, newValues) {
-    if (('name' in newValues) && newValues['name'].match(/^\\s*$/)) {
-        console.log("Невалидно име");
-        return;
-    }
     if (!(id in events)) {
         console.log("Не съществува събитие с това id!");
         return;
@@ -72,7 +94,7 @@ function editEvent(id, newValues) {
     if ('ageRestriction' in newValues) {
         if (newValues['ageRestriction'].match(/^18\+$/)) {
             accessFlag = true;
-        } else if (newValues['ageRestriction'].match(/^18-$/) || newValues['ageRestriction'].match(/^$/)) {
+        } else if (newValues['ageRestriction'].match(/^няма$/) || newValues['ageRestriction'].match(/^$/)) {
             accessFlag = false;
         } else {
             console.log("Грешно възрастово ограничение!");
@@ -80,12 +102,23 @@ function editEvent(id, newValues) {
         }
     }
 
-    if ('name' in newValues)
-        events[id]['name'] = newValues['name'];
-    if ('ageRestriction' in newValues)
-        events[id]['accessFlag'] = accessFlag;
+    let date = events[id]['date'];
+    if ('date' in newValues) {
+        if (date.match(/\d{2}\.\d{2}\.\d{4}/)) {
+            // Manually parsing date string (as mozilla docs recommend)
+            let day = date.split('.')[0];
+            let month = date.split('.')[1];
+            let year = date.split('.')[2];
+            date = (new Date(parseInt(year), parseInt(month), parseInt(day))).toString();
+        } else {
+            console.log("Грешен формат за дата!");
+            return;
+        }
+    }
 
-    ageRestriction = events[id]['accessFlag'] ? "18+" : "18-";
+    events[id] = {'name': name, 'accessFlag': accessFlag, 'participants': events[id]['participants'],'date': date};
+
+    ageRestriction = events[id]['accessFlag'] ? "18+" : "няма";
     console.log(`${id}. Име на събитие: ${events[id]['name']}, Възрастово ограничение: ${ageRestriction}`);
     writeDataToJSON();
 }
@@ -96,7 +129,7 @@ function removeEvent(id) {
         return;
     }
 
-    let ageRestriction = events[id]['accessFlag'] ? "18+" : "18-";
+    let ageRestriction = events[id]['accessFlag'] ? "18+" : "няма";
     let msg = `Събитие: ${id}: ${events[id]['name']}, Възрастово ограничение: ${ageRestriction} е премахнато!`;
     delete events[id];
     console.log(msg);
@@ -105,8 +138,13 @@ function removeEvent(id) {
 
 function printEvents() {
     for (let eventId in events) {
-        let ageRestriction = events[eventId]['accessFlag'] ? "18+" : "18-";
-        console.log(`${eventId}. Име на събитие: ${events[eventId]['name']}, Възрастово ограничение: ${ageRestriction}`);
+        let ageRestriction = events[eventId]['accessFlag'] ? "18+" : "няма";
+        if (events[eventId]['date'] !== null) {
+            let date = new Date(events[eventId]['date']);
+            console.log(`${eventId}. Име на събитие: ${events[eventId]['name']}, Възрастово ограничение: ${ageRestriction}, Дата: ${date.toLocaleDateString('bg-BG')}`);
+        } else {
+            console.log(`${eventId}. Име на събитие: ${events[eventId]['name']}, Възрастово ограничение: ${ageRestriction}`);
+        }
     }
 }
 
@@ -195,7 +233,6 @@ function removeClientFromEvent(eventId, clientName) {
         console.log("Не съществува клиент с такова име!");
         return;
     }
-
     events[eventId]['participants'].forEach((client, idx) => {
         if (client == clientName) {
             events[eventId]['participants'].splice(idx, 1);
@@ -235,17 +272,26 @@ switch(process.argv[2]) {
         printEvents();
         break;
     case 'add-event':
-        //argv[3] - Name, argv[4] - AccessFlag
-        if (process.argv.length < 5)
-            addEvent(process.argv[3]);
-        else
-            addEvent(process.argv[3], process.argv[4]);
+        //args start from 3: [key value]...
+        if ((process.argv.length < 5) || ((process.argv.length % 2) == 0))
+            break;
+
+        validKeys = ["name", "ageRestriction", "date"];
+        let values = {};
+        for (let i = 3; i < process.argv.length; i += 2) {
+            if (!validKeys.includes(process.argv[i])) {
+                process.exit();
+            }
+            values[process.argv[i]] = process.argv[i + 1];
+        }
+
+        addEvent(values);
         break;
     case 'edit-event':
         //node app.js edit-event <id> [<what_to_edit> <new_value>...]
         if (process.argv.length < 6)
             break;
-        validKeys = ["name", "ageRestriction"];
+        validKeys = ["name", "ageRestriction", "date"];
         let newValues = {};
         for (let i = 4; i < process.argv.length; i += 2) {
             if (!validKeys.includes(process.argv[i])) {
