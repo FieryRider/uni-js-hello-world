@@ -55,7 +55,19 @@ function editEvent(id, newValues) {
         console.log("Невалидно име");
         return;
     }
+    if (!(id in events)) {
+        console.log("Не съществува събитие с това id!");
+        return;
+    }
 
+    let name = events[id]['name'];
+    if ('name' in newValues) {
+        if (newValues['name'].match(/^\\s*$/)) {
+            console.log("Невалидно име");
+            return;
+        }
+        name = newValues['name'];
+    }
     let accessFlag = events[id]['accessFlag'];
     if ('ageRestriction' in newValues) {
         if (newValues['ageRestriction'].match(/^18\+$/)) {
@@ -79,7 +91,7 @@ function editEvent(id, newValues) {
 }
 
 function removeEvent(id) {
-    if (isNaN(id)) {
+    if (isNaN(id) || !(id in events)) {
         console.log("Невалидно id");
         return;
     }
@@ -157,6 +169,15 @@ function addClient(name, sex, age) {
 }
 
 function addClientToEvent(eventId, clientName) {
+    if (!(eventId in events)) {
+        console.log("Не съществува събитие с това id!");
+        return;
+    }
+    if (!(clientName in clients)) {
+        console.log("Не съществува клиент с такова име!");
+        return;
+    }
+
     if ((clients[clientName]['age'] < 18) && events[eventId]['accessFlag']) {
         console.log("Потребителя няма нужната възраст за това събитие!");
         return;
@@ -166,6 +187,15 @@ function addClientToEvent(eventId, clientName) {
 }
 
 function removeClientFromEvent(eventId, clientName) {
+    if (!(eventId in events)) {
+        console.log("Не съществува събитие с това id!");
+        return;
+    }
+    if (!(clientName in clients)) {
+        console.log("Не съществува клиент с такова име!");
+        return;
+    }
+
     events[eventId]['participants'].forEach((client, idx) => {
         if (client == clientName) {
             events[eventId]['participants'].splice(idx, 1);
@@ -199,6 +229,7 @@ if (fs.existsSync('./data.json')) {
     readDataFromJSON();
 }
 
+let validKeys;
 switch(process.argv[2]) {
     case 'list-events':
         printEvents();
@@ -214,12 +245,12 @@ switch(process.argv[2]) {
         //node app.js edit-event <id> [<what_to_edit> <new_value>...]
         if (process.argv.length < 6)
             break;
-        let validKeys = ["name", "ageRestriction"];
+        validKeys = ["name", "ageRestriction"];
         let newValues = {};
         for (let i = 4; i < process.argv.length; i += 2) {
             if (!validKeys.includes(process.argv[i])) {
-                console.log(`Невалиден атрибут: {process.argv[i]}`);
-                break;
+                console.log(`Невалиден атрибут: ${process.argv[i]}`);
+                process.exit();
             }
             newValues[process.argv[i]] = process.argv[i + 1];
         }
@@ -254,7 +285,7 @@ switch(process.argv[2]) {
         //argv[3] - Event Id, argv[4] - Client's name
         if (process.argv.length < 5) {
             console.log("Недостатъчно аргументи");
-            break;
+            process.exit();
         }
         removeClientFromEvent(process.argv[3], process.argv[4]);
         break;
